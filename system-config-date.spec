@@ -1,7 +1,7 @@
 Summary: A graphical interface for modifying system date and time
 Name: system-config-date
-Version: 1.9.15
-Release: 2%{?dist}
+Version: 1.9.16
+Release: 1%{?dist}
 URL: http://fedoraproject.org/wiki/SystemConfig/date
 License: GPLv2+
 Group: System Environment/Base
@@ -10,7 +10,6 @@ BuildArch: noarch
 # We are upstream, thus the source is only available from within this source
 # package.
 Source0: %{name}-%{version}.tar.bz2
-Patch0: scd-no-xen-error.patch
 Obsoletes: timetool < 3.0
 Obsoletes: dateconfig < 1.2
 Obsoletes: timeconfig < 3.2.10
@@ -50,7 +49,6 @@ synchronize the time of the system with an NTP time server.
 
 %prep
 %setup -q
-%patch0 -p1
 
 %build
 make %{?_smp_mflags}
@@ -104,9 +102,9 @@ fi
 %config(noreplace) %{_sysconfdir}/ntp/ntpservers
 
 %changelog
-* Tue Oct 30 2007 Jeremy Katz <katzj@redhat.com> - 1.9.15-2
-- don't show error on syncing hardware clock to avoid problems when 
-  running on xen (#357311)
+* Tue Oct 30 2007 Nils Philippsen <nphilipp@redhat.com> 1.9.16-1
+- use warning dialog, exit gracefully if hwclock fails to allow operation in a
+  XEN guest (#357311)
 
 * Tue Oct 23 2007 Nils Philippsen <nphilipp@redhat.com> 1.9.15-1
 - cope with comments in /etc/ntp/step-tickers (#333881)

@@ -1,0 +1,11 @@
+diff -up system-config-date-1.9.30/src/timezoneBackend.py.underscore system-config-date-1.9.30/src/timezoneBackend.py
+--- system-config-date-1.9.30/src/timezoneBackend.py.underscore	2008-05-02 17:07:42.000000000 -0400
++++ system-config-date-1.9.30/src/timezoneBackend.py	2008-05-02 17:07:57.000000000 -0400
+@@ -150,6 +150,7 @@ class timezoneBackend:
+                     tokens = string.split(line, "=")
+                     if tokens[0] == "ZONE":
+                         self.tz = string.replace(tokens[1], '"', '')
++                        self.tz = string.replace(self.tz, '_', ' ')
+                 except:
+                     pass
+         except:

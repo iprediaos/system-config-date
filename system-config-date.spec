@@ -30,6 +30,7 @@ BuildArch: noarch
 # We are upstream, thus the source is only available from within this source
 # package.
 Source0: %{name}-%{version}.tar.bz2
+Patch0: system-config-date-underscore.patch
 Obsoletes: timetool < 3.0
 Obsoletes: dateconfig < 1.2
 Obsoletes: timeconfig < 3.2.10
@@ -78,6 +79,7 @@ synchronize the time of the system with an NTP time server.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 make %{?with_console_util:CONSOLE_USE_CONFIG_UTIL=1} %{?_smp_mflags}

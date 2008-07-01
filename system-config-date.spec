@@ -20,8 +20,8 @@
 
 Summary: A graphical interface for modifying system date and time
 Name: system-config-date
-Version: 1.9.30
-Release: 2%{?dist}
+Version: 1.9.32
+Release: 1%{?dist}
 URL: http://fedoraproject.org/wiki/SystemConfig/date
 License: GPLv2+
 Group: System Environment/Base
@@ -30,7 +30,6 @@ BuildArch: noarch
 # We are upstream, thus the source is only available from within this source
 # package.
 Source0: %{name}-%{version}.tar.bz2
-Patch0: system-config-date-underscore.patch
 Obsoletes: timetool < 3.0
 Obsoletes: dateconfig < 1.2
 Obsoletes: timeconfig < 3.2.10
@@ -79,7 +78,6 @@ synchronize the time of the system with an NTP time server.
 
 %prep
 %setup -q
-%patch0 -p1
 
 %build
 make %{?with_console_util:CONSOLE_USE_CONFIG_UTIL=1} %{?_smp_mflags}
@@ -136,8 +134,12 @@ fi
 %config(noreplace) %{_sysconfdir}/ntp/ntpservers
 
 %changelog
-* Fri May  2 2008 Jeremy Katz <katzj@redhat.com> - 1.9.30-2
-- Add patch to handle '_' vs ' ' mismatch for zone names (#444093)
+* Tue Jul 01 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.32-1
+- fix Arabic timezone translation (#453202, patch by Muayyad Alsadi)
+
+* Mon May 05 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.31-1
+- translate underscores to spaces when reading in zone names (#444093, patch by
+  Jeremy Katz)
 
 * Tue Apr 08 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.30-1
 - pick up updated translations

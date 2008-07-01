@@ -1,6 +1,26 @@
+# Command line configurables
+
+%if 0%{?fedora}%{?rhel} == 0 || 0%{?fedora} >= 8 || 0%{?rhel} >= 6
+%bcond_without newt_python
+%else
+%bcond_with newt_python
+%endif
+
+%if 0%{?fedora}%{?rhel} == 0 || 0%{?fedora} >= 9 || 0%{?rhel} >= 6
+%bcond_without console_util
+%else
+%bcond_with console_util
+%endif
+
+%if 0%{?fedora} < 8 || 0%{?rhel} < 6
+%bcond_without scrollkeeper
+%else
+%bcond_with scrollkeeper
+%endif
+
 Summary: A graphical interface for modifying system date and time
 Name: system-config-date
-Version: 1.9.16
+Version: 1.9.32
 Release: 1%{?dist}
 URL: http://fedoraproject.org/wiki/SystemConfig/date
 License: GPLv2+
@@ -19,23 +39,32 @@ BuildRequires: gettext
 BuildRequires: intltool
 BuildRequires: python
 BuildRequires: anaconda
+BuildRequires: gnome-doc-utils
+BuildRequires: docbook-dtds
+%if %{with scrollkeeper}
+BuildRequires: scrollkeeper
+%else
+BuildRequires: rarian-compat
+%endif
+
 Requires: ntp
 Requires: python >= 2.0
 Requires: pygtk2-libglade
 Requires: gnome-python2-canvas
+%if 0%{?with_console_util:1}
+Requires: usermode >= 1.94
+%else
 Requires: usermode >= 1.36
+%endif
 Requires: chkconfig
 Requires: rhpl
-%if 0%{?fedora}%{?rhel} == 0 || 0%{?fedora} >= 8 || 0%{?rhel} >= 6
+%if 0%{?with_newt_python:1}
 Requires: newt-python
 %else
 Requires: newt
 %endif
-%if 0%{?fedora}%{?rhel} == 0 || 0%{?fedora} >= 7 || 0%{?rhel} >= 6
-Requires: xdg-utils
-%else
-Requires: htmlview
-%endif
+Requires(post): scrollkeeper >= 0:0.3.4
+Requires(postun): scrollkeeper >= 0:0.3.4
 Requires: hicolor-icon-theme
 # system-config-date can act as a plugin to set the time/date, configure NTP or
 # the timezone for firstboot if the latter is present, but doesn't require it.
@@ -51,7 +80,7 @@ synchronize the time of the system with an NTP time server.
 %setup -q
 
 %build
-make %{?_smp_mflags}
+make %{?with_console_util:CONSOLE_USE_CONFIG_UTIL=1} %{?_smp_mflags}
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -71,17 +100,20 @@ touch --no-create %{_datadir}/icons/hicolor
 if [ -x %{_bindir}/gtk-update-icon-cache ]; then
   %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
 fi
+%{_bindir}/scrollkeeper-update -q || :
 
 %postun
 touch --no-create %{_datadir}/icons/hicolor
 if [ -x %{_bindir}/gtk-update-icon-cache ]; then
   %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
 fi
+%{_bindir}/scrollkeeper-update -q || :
 
 %files -f %{name}.lang
 %defattr(-,root,root,-)
 %doc COPYING
-%doc doc/*
+%doc %{_datadir}/omf/system-config-date
+%doc %{_datadir}/gnome/help/system-config-date
 %{_bindir}/system-config-date
 %{_bindir}/system-config-time
 %{_bindir}/dateconfig
@@ -102,6 +134,75 @@ fi
 %config(noreplace) %{_sysconfdir}/ntp/ntpservers
 
 %changelog
+* Tue Jul 01 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.32-1
+- fix Arabic timezone translation (#453202, patch by Muayyad Alsadi)
+
+* Mon May 05 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.31-1
+- translate underscores to spaces when reading in zone names (#444093, patch by
+  Jeremy Katz)
+
+* Tue Apr 08 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.30-1
+- pick up updated translations
+
+* Mon Apr 07 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.29-1
+- further NTP backend cleanup (#441040)
+
+* Thu Apr 03 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.28-1
+- update ntp.conf template
+- simplify NTP backend code
+- use dynamic keyword for servers (#229217)
+
+* Mon Mar 31 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.27-1
+- handle missing UTC information in /etc/adjtime, disable UTC/non-UTC selection
+  if hwclock doesn't work (#438124)
+
+* Wed Mar 26 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.26-1
+- rename timezones/sr@Latn.po to sr@latin.po (#426591)
+
+* Tue Mar 25 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.25-1
+- use hard links to avoid excessive disk space requirements (#438722)
+
+* Tue Mar 18 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.24-1
+- pick up updated translations
+- enable all languages for online doc translation
+- various online doc fixes
+- zoom in on click into map (#437767)
+- draw label into map for currently selected city
+
+* Tue Mar 04 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.23-1
+- handle ntpdate service (#229217, patch by Miroslav Lichvar)
+- change all runlevels instead of only 3 and 5
+
+* Tue Feb 05 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.22-1
+- keep UTC info in /etc/adjtime, drop ARC support (patch by Bill Nottingham)
+
+* Sat Jan 19 2008 Nils Philippsen <nphilipp@redhat.com>
+- add BR: docbook-dtds, scrollkeeper/rarian-compat
+
+* Fri Jan 18 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.21-1
+- online help: reorg, make xmllint happy
+
+* Fri Jan 11 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.20-1
+- use config-util for userhelper configuration from Fedora 9 on (#428394)
+
+* Thu Jan 10 2008 Nils Philippsen <nphilipp@redhat.com> - 1.9.19-1
+- only attempt to use yelp to display online help (as xdg-open does just the
+  same), drop requirements on xdg-utils and yelp for now, update error message
+  shown if yelp isn't found (#420101)
+
+* Thu Dec 27 2007 Nils Philippsen <nphilipp@redhat.com> - 1.9.18-1
+- rename sr@Latn to sr@latin (#426591)
+
+* Thu Nov 22 2007 Nils Philippsen <nphilipp@redhat.com> 1.9.17-1
+- some doc changes
+
+* Wed Nov 21 2007 Nils Philippsen <nphilipp@redhat.com>
+- migrate documentation to yelp/DocBook XML
+- add docs translation rules
+
+* Wed Oct 31 2007 Nils Philippsen <nphilipp@redhat.com>
+- mention XEN/virtualization issues if hwclock fails (#357311)
+
 * Tue Oct 30 2007 Nils Philippsen <nphilipp@redhat.com> 1.9.16-1
 - use warning dialog, exit gracefully if hwclock fails to allow operation in a
   XEN guest (#357311)

@@ -1,3 +1,6 @@
+%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(0)")}
+%{!?python_version: %global python_version %(%{__python} -c "from distutils.sysconfig import get_python_version; print get_python_version()")}
+
 # Command line configurables
 
 %if 0%{?fedora}%{?rhel} == 0 || 0%{?fedora} >= 8 || 0%{?rhel} >= 6
@@ -14,27 +17,34 @@
 
 Summary: A graphical interface for modifying system date and time
 Name: system-config-date
-Version: 1.9.38
-Release: 1%{?dist}.1
+Version: 1.9.53
+Release: 1%{?dist}
 URL: http://fedorahosted.org/%{name}
 License: GPLv2+
 Group: System Environment/Base
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
-Source0: http://fedorahosted.org/releases/%(echo %{name} | %{__sed} 's@\(\(.\)\(.\).*\)@\2/\3/\1@')/%{name}-%{version}.tar.bz2
+Source0: http://fedorahosted.org/released/%{name}/%{name}-%{version}.tar.bz2
 Obsoletes: timetool < 3.0
 Obsoletes: dateconfig < 1.2
 Obsoletes: timeconfig < 3.2.10
 Obsoletes: redhat-config-date < 1.5.26
+# Until version 1.9.34, system-config-date contained online documentation.
+# From version 1.9.35 on, online documentation is split off into its own
+# package system-config-date-docs. The following ensures that updating from
+# earlier versions gives you both the main package and documentation.
 Obsoletes: system-config-date < 1.9.35
-Conflicts: system-config-date < 1.9.35
 BuildRequires: desktop-file-utils
 BuildRequires: gettext
 BuildRequires: intltool
 BuildRequires: python
+BuildRequires: python-devel
 
+Requires: libselinux-python
 Requires: ntp
 Requires: python >= 2.0
+Requires: python-slip >= 0.2.3
+Requires: pygtk2 >= 2.12.0
 Requires: pygtk2-libglade
 Requires: gnome-python2-canvas
 %if 0%{?with_console_util:1}
@@ -43,7 +53,6 @@ Requires: usermode-gtk >= 1.94
 Requires: usermode-gtk >= 1.36
 %endif
 Requires: chkconfig
-Requires: rhpl
 %if 0%{?with_newt_python:1}
 Requires: newt-python
 %else
@@ -64,7 +73,14 @@ synchronize the time of the system with an NTP time server.
 %setup -q
 
 %build
-make %{?with_console_util:CONSOLE_USE_CONFIG_UTIL=1} %{?_smp_mflags}
+make \
+%if 0%{?fedora} > 0
+    POOL_NTP_ORG_VENDOR=fedora \
+%endif
+%if 0%{?rhel} > 0
+    POOL_NTP_ORG_VENDOR=rhel \
+%endif
+    %{?with_console_util:CONSOLE_USE_CONFIG_UTIL=1} %{?_smp_mflags}
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -95,9 +111,6 @@ fi
 %defattr(-,root,root,-)
 %doc COPYING
 %{_bindir}/system-config-date
-%{_bindir}/system-config-time
-%{_bindir}/dateconfig
-%{_sbindir}/timeconfig
 %{_datadir}/system-config-date
 %{_datadir}/applications/system-config-date.desktop
 %{_datadir}/system-config-date/pixmaps/system-config-date.png
@@ -107,15 +120,75 @@ fi
 %{_mandir}/ja/man8/system-config-date*
 %config(noreplace) %{_sysconfdir}/security/console.apps/system-config-date
 %config(noreplace) %{_sysconfdir}/pam.d/system-config-date
-%config(noreplace) %{_sysconfdir}/security/console.apps/system-config-time
-%config(noreplace) %{_sysconfdir}/pam.d/system-config-time
-%config(noreplace) %{_sysconfdir}/security/console.apps/dateconfig
-%config(noreplace) %{_sysconfdir}/pam.d/dateconfig
-%config(noreplace) %{_sysconfdir}/ntp/ntpservers
+%{python_sitelib}/scdate
+%{python_sitelib}/scdate-%{version}-py%{python_version}.egg-info
+#%{python_sitelib}/scdate.dbus-%{version}-py%{python_version}.egg-info
 
 %changelog
-* Thu Jun  4 2009 Dan Horak <dan[at]danny.cz> - 1.9.38-1.1
-- anaconda is not required for build
+* Tue Oct 20 2009 Nils Philippsen <nils@redhat.com> - 1.9.53-1
+- make translating time zones more robust (#525921)
+
+* Thu Oct 01 2009 Nils Philippsen <nils@redhat.com> - 1.9.52-1
+- pull in fixed Malayalam translations (#526636)
+
+* Wed Sep 30 2009 Nils Philippsen <nils@redhat.com> - 1.9.51-1
+- deal better with untranslated time zones (#524823)
+
+* Mon Sep 28 2009 Nils Philippsen <nils@redhat.com> - 1.9.50-1
+- pick up new translations
+
+* Mon Sep 14 2009 Nils Philippsen <nils@redhat.com> - 1.9.49-1
+- pick up updated translations
+
+* Mon Sep 07 2009 Nils Philippsen <nils@redhat.com> - 1.9.48-1
+- use string object methods instead of string module
+- get rid of timeconfig and compat program names
+- move backend code into scdate.core module
+
+* Wed Sep 02 2009 Nils Philippsen <nils@redhat.com> - 1.9.47-1
+- import gettext from each module again (#520799)
+
+* Wed Sep 02 2009 Nils Philippsen <nils@redhat.com> - 1.9.46-1
+- use new gtk tooltip API
+
+* Tue Sep 01 2009 Nils Philippsen <nils@redhat.com>
+- use slip.util.files.linkorcopyfile() (#512046)
+- initialize gettext correctly in all places
+
+* Fri Aug 28 2009 Nils Philippsen <nils@redhat.com> - 1.9.45-1
+- initialize gettext correctly
+
+* Fri Aug 28 2009 Nils Philippsen <nils@redhat.com> - 1.9.44-1
+- don't unnecessarily initialize gettext
+
+* Fri Aug 28 2009 Nils Philippsen <nils@redhat.com> - 1.9.43-1
+- use str instead of unicode as N_ implementation
+
+* Wed Aug 26 2009 Nils Philippsen <nils@redhat.com> - 1.9.42-1
+- provide missing N_()
+
+* Wed Aug 26 2009 Nils Philippsen <nils@redhat.com> - 1.9.41-1
+- use gettext instead of rhpl
+
+* Wed Aug 26 2009 Nils Philippsen <nils@redhat.com> - 1.9.40-1
+- explain obsoleting old versions
+
+* Wed Jul 29 2009 Nils Philippsen <nils@redhat.com>
+- improve manual and NTP settings (#507619)
+- improve frames and expander (#507623)
+- display current date and time always
+- fix explanation labels on "Date and Time" page
+- fix non-zero page size deprecation warnings
+
+* Thu Jul 09 2009 Nils Philippsen <nils@redhat.com> - 1.9.39-1
+- use POOL_NTP_ORG_VENDOR in Makefile to set default NTP servers (#510309)
+
+* Thu Jun 04 2009 Nils Philippsen <nils@redhat.com>
+- don't BR: anaconda
+
+* Thu May 28 2009 Nils Philippsen <nils@redhat.com>
+- require libselinux-python
+- use simplified source URL
 
 * Mon Apr 20 2009 Nils Philippsen <nils@redhat.com> - 1.9.38-1
 - restore SELinux context of /etc/localtime (#490323, patch by Daniel Walsh)

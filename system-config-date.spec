@@ -25,8 +25,8 @@
 
 Summary: A graphical interface for modifying system date and time
 Name: system-config-date
-Version: 1.10.5
-Release: 3%{?dist}
+Version: 1.10.6
+Release: 1%{?dist}
 URL: http://fedorahosted.org/%{name}
 License: GPLv2+
 Group: System Environment/Base
@@ -131,11 +131,8 @@ fi
 #%{python_sitelib}/scdate.dbus-%{version}-py%{python_version}.egg-info
 
 %changelog
-* Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.10.5-3
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
-
-* Fri Feb 15 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.10.5-2
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
+* Mon Jun 17 2013 Nils Philippsen <nils@redhat.com> - 1.10.6-1
+- pull updated translations (#950571)
 
 * Tue Dec 11 2012 Nils Philippsen <nils@redhat.com> - 1.10.5-1
 - pull updated and new translations (#878319)

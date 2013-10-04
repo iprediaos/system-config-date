@@ -26,7 +26,7 @@
 Summary: A graphical interface for modifying system date and time
 Name: system-config-date
 Version: 1.10.6
-Release: 1%{?dist}
+Release: 2%{?dist}
 URL: http://fedorahosted.org/%{name}
 License: GPLv2+
 Group: System Environment/Base
@@ -104,16 +104,16 @@ desktop-file-install --vendor system --delete-original       \
 rm -rf $RPM_BUILD_ROOT
 
 %post
-touch --no-create %{_datadir}/icons/hicolor
-if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-  %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
-fi
+/bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 
 %postun
-touch --no-create %{_datadir}/icons/hicolor
-if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-  %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+if [ $1 -eq 0 ] ; then
+    /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null
+    /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 fi
+
+%posttrans
+/usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 
 %files -f %{name}.lang -f %{name}-timezones.lang
 %defattr(-,root,root,-)
@@ -131,6 +131,9 @@ fi
 #%{python_sitelib}/scdate.dbus-%{version}-py%{python_version}.egg-info
 
 %changelog
+* Fri Oct 04 2013 Rex Dieter <rdieter@fedoraproject.org> 1.10.6-2
+- use optimized icon scriptlets
+
 * Mon Jun 17 2013 Nils Philippsen <nils@redhat.com> - 1.10.6-1
 - pull updated translations (#950571)
 
